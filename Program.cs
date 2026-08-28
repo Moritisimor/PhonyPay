@@ -27,7 +27,13 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.MapGet("/api/status", Handlers.Status);
+
 app.MapGet("/api/accounts", Handlers.GetAccounts);
+app.MapGet("/api/accounts/{id:int}", Handlers.GetAccountById);
+app.MapPost("/api/accounts", Handlers.RegisterAccount);
+app.MapPost("/api/accounts/withdraw", Handlers.WithdrawFromAccount);
+app.MapPost("/api/accounts/deposit", Handlers.DepositToAccount);
+
 app.MapGet("/api/transactions", Handlers.GetTransactions);
 
 app.Run();
