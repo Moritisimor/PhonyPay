@@ -41,6 +41,11 @@ public class AccountRepo(MySqlConnection conn)
     public async Task<IEnumerable<Account>> GetAccounts() =>
         await conn.QueryAsync<Account>("SELECT * FROM Accounts");
 
+    public async Task DepositToAccountWithId(int accountId, int amount) =>
+        await conn.ExecuteAsync(
+            "UPDATE Accounts SET Balance = Balance + @amount WHERE AccountID = @accountId", 
+            new { accountId, amount });
+    
     public async Task DeleteAccountWithId(int accountId) =>
         await conn.ExecuteAsync("DELETE FROM Accounts WHERE AccountID = @accountId", new { accountId });
 }

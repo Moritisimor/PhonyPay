@@ -1,6 +1,7 @@
-using Dapper;
 using MySqlConnector;
 using PhonyPay;
+using PhonyPay.Handlers;
+using PhonyPay.Repo;
 
 var builder = WebApplication.CreateBuilder(args);
 var server = Helpers.GetEnvOrThrow("DB_SERVER");
@@ -9,24 +10,24 @@ var password = Helpers.GetEnvOrThrow("DB_PASSWORD");
 var database = Helpers.GetEnvOrThrow("DATABASE");
 var connString = $"Server={server};User ID={username};Password={password};Database={database};";
 
-builder.Services.AddMySqlDataSource(connString);
+var conn = new MySqlConnection(connString);
+var accountRepo = new AccountRepo(conn);
+var transactionRepo = new TransactionRepo(conn);
+
+builder.Services.AddTransient(_ => accountRepo);
+builder.Services.AddTransient(_ => transactionRepo);
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    // Check if the Database is queryable
-    var db = scope.ServiceProvider.GetRequiredService<MySqlConnection>();
-    db.QuerySingle<int>("SELECT 1");
+    var accRep = scope.ServiceProvider.GetRequiredService<AccountRepo>();
+    await accRep.Migrate();
+    await transactionRepo.Migrate();
 }
 
-app.MapGet("/api/status", (MySqlConnection db) =>
-{
-    var res = db.QuerySingle<int>("SELECT 1");
-    return new
-    {
-        status = "OK",
-        res
-    };
-});
+app.MapGet("/api/status", Handlers.Status);
+app.MapGet("/api/accounts", Handlers.GetAccounts);
+app.MapGet("/api/transactions", Handlers.GetTransactions);
 
 app.Run();
