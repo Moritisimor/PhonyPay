@@ -34,5 +34,7 @@ app.MapPost("/api/accounts/withdraw", Handlers.WithdrawFromAccount);
 app.MapPost("/api/accounts/deposit", Handlers.DepositToAccount);
 
 app.MapGet("/api/transactions", Handlers.GetTransactions);
+app.MapGet("/api/transactions/{id:int}", Handlers.GetTransactionById);
+app.MapPost("/api/transactions", Handlers.PostTransaction);
 
 app.Run();
