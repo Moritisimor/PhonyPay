@@ -17,8 +17,11 @@ public class TransactionRepo(MySqlConnection conn)
                                 )
                                 """);
 
-    public async Task<int> Insert(TransactionPost transaction, AccountRepo accounts)
+    public async Task<int> Insert(TransactionPost transaction)
     {
+        await conn.OpenAsync();
+        var accounts = new AccountRepo(conn);
+        
         var receiver = await accounts.GetAccountById(transaction.ReceiverId);
         if (receiver is null)
             throw new NoSuchReceiverException($"No account with this ID: {transaction.ReceiverId}");
@@ -26,22 +29,35 @@ public class TransactionRepo(MySqlConnection conn)
         var payer = await accounts.GetAccountById(transaction.SenderId);
         if (payer is null)
             throw new NoSuchPayerException($"No account with this ID: {transaction.SenderId}");
-        
-        await accounts.WithdrawFromAccountWithId(transaction.SenderId, transaction.Amount);
-        await accounts.DepositToAccountWithId(transaction.ReceiverId, transaction.Amount);
-        return await conn.QuerySingleAsync<int>(
-            """
-            INSERT INTO Transactions (PayerId, ReceiverId, Amount) 
-            VALUES (@PayerId, @ReceiverId, @Amount);
 
-            SELECT LAST_INSERT_ID();
-            """,
-            new
-            {
-                PayerId = transaction.SenderId,
-                transaction.ReceiverId,
-                transaction.Amount
-            });
+        await using var tx = await conn.BeginTransactionAsync();
+        try
+        {
+            await accounts.WithdrawFromAccountWithId(transaction.SenderId, transaction.Amount, tx);
+            await accounts.DepositToAccountWithId(transaction.ReceiverId, transaction.Amount, tx);
+            var insertId = await conn.QuerySingleAsync<int>(
+                """
+                INSERT INTO Transactions (PayerId, ReceiverId, Amount) 
+                VALUES (@PayerId, @ReceiverId, @Amount);
+
+                SELECT LAST_INSERT_ID();
+                """,
+                new
+                {
+                    PayerId = transaction.SenderId,
+                    transaction.ReceiverId,
+                    transaction.Amount
+                },
+                transaction: tx);
+            
+            await tx.CommitAsync();
+            return insertId;
+        }
+        catch (Exception)
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
     
     public async Task<IEnumerable<Transaction>> GetTransactions() =>

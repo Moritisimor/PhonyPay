@@ -1,3 +1,4 @@
+using MySqlConnector;
 using PhonyPay.Exceptions;
 using PhonyPay.Models.Transactions;
 using PhonyPay.Repo;
@@ -12,14 +13,12 @@ public static partial class Handlers
     public static async Task<IResult> GetTransactionById(TransactionRepo transactions, int id) => 
         Results.Ok(await transactions.GetTransactionById(id));
 
-    public static async Task<IResult> PostTransaction(
-        TransactionRepo transactions, 
-        TransactionPost transaction,
-        AccountRepo accounts)
+    public static async Task<IResult> PostTransaction(TransactionPost transaction, MySqlConnection conn)
     {
+        var transactions = new TransactionRepo(conn);
         try
         {
-            var newTransactionId = await transactions.Insert(transaction, accounts);
+            var newTransactionId = await transactions.Insert(transaction);
             return Results.Ok(new { id = newTransactionId });
         }
         catch (NoSuchPayerException e)
