@@ -1,3 +1,4 @@
+using PhonyPay.Exceptions;
 using PhonyPay.Models.Accounts;
 using PhonyPay.Repo;
 
@@ -13,24 +14,23 @@ public static partial class Handlers
             null => Results.NotFound(new { error = "Account not found" })
         };
 
-    public static async Task<IResult> WithdrawFromAccount(
-        AccountRepo accountRepo, 
-        AccountBalanceChangePost? withdrawData)
+    public static async Task<IResult> WithdrawFromAccount(AccountRepo accountRepo, AccountBalanceChangePost? data)
     {
-        if (withdrawData is null) 
+        if (data is null) 
             return Results.BadRequest();
 
         try
         {
-            var newBalance = await accountRepo.WithdrawFromAccountWithId( 
-                withdrawData.AccountId, 
-                withdrawData.Amount);
-            
+            var newBalance = await accountRepo.WithdrawFromAccountWithId(data.AccountId, data.Amount);
             return Results.Ok(new { newBalance });
         }
         catch (InvalidOperationException)
         {
             return Results.NotFound(new { error = "Account not found" });
+        }
+        catch (InsufficientBalanceException e)
+        {
+            return Results.BadRequest(new { error = e.Message });
         }
     }
 

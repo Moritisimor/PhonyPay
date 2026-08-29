@@ -35,5 +35,9 @@ public static partial class Handlers
         {
             return Results.BadRequest(new { error = e.Message });
         }
+        catch (InsufficientBalanceException e)
+        {
+            return Results.BadRequest(new { error = e.Message });
+        }
     }
 }
