@@ -1,4 +1,3 @@
-using MySqlConnector;
 using PhonyPay.Exceptions;
 using PhonyPay.Models.Transactions;
 using PhonyPay.Repo;
@@ -13,9 +12,8 @@ public static partial class Handlers
     public static async Task<IResult> GetTransactionById(TransactionRepo transactions, int id) => 
         Results.Ok(await transactions.GetTransactionById(id));
 
-    public static async Task<IResult> PostTransaction(TransactionPost transaction, MySqlConnection conn)
+    public static async Task<IResult> PostTransaction(TransactionPost transaction, TransactionRepo transactions)
     {
-        var transactions = new TransactionRepo(conn);
         try
         {
             var newTransactionId = await transactions.Insert(transaction);
@@ -30,6 +28,10 @@ public static partial class Handlers
             return Results.BadRequest(new { error = e.Message });
         }
         catch (PayerIsReceiverException e)
+        {
+            return Results.BadRequest(new { error = e.Message });
+        }
+        catch (ZeroOrNegativeAmountException e)
         {
             return Results.BadRequest(new { error = e.Message });
         }

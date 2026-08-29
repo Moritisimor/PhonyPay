@@ -19,6 +19,12 @@ public class TransactionRepo(MySqlConnection conn)
 
     public async Task<int> Insert(TransactionPost transaction)
     {
+        if (transaction.SenderId == transaction.ReceiverId)
+            throw new PayerIsReceiverException("You cannot transfer money to yourself");
+
+        if (transaction.Amount <= 0)
+            throw new ZeroOrNegativeAmountException("Cannot transfer a negative or zero amount");
+        
         await conn.OpenAsync();
         var accounts = new AccountRepo(conn);
         
