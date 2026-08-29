@@ -26,6 +26,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.MapGet("/api/status", Handlers.Status);
+app.MapGet("/api/status/db", Handlers.DatabaseStatus);
 
 app.MapGet("/api/accounts", Handlers.GetAccounts);
 app.MapGet("/api/accounts/{id:int}", Handlers.GetAccountById);
