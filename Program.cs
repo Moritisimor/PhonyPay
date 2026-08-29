@@ -10,20 +10,19 @@ var password = Helpers.GetEnvOrThrow("DB_PASSWORD");
 var database = Helpers.GetEnvOrThrow("DATABASE");
 var connString = $"Server={server};User ID={username};Password={password};Database={database};";
 
-var conn = new MySqlConnection(connString);
-var accountRepo = new AccountRepo(conn);
-var transactionRepo = new TransactionRepo(conn);
-
-builder.Services.AddTransient(_ => accountRepo);
-builder.Services.AddTransient(_ => transactionRepo);
+builder.Services.AddMySqlDataSource(connString);
+builder.Services.AddTransient<AccountRepo>();
+builder.Services.AddTransient<TransactionRepo>();
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
     var accRep = scope.ServiceProvider.GetRequiredService<AccountRepo>();
+    var transRep = scope.ServiceProvider.GetRequiredService<TransactionRepo>();
+    
     await accRep.Migrate();
-    await transactionRepo.Migrate();
+    await transRep.Migrate();
 }
 
 app.MapGet("/api/status", Handlers.Status);
