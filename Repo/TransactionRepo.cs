@@ -29,15 +29,15 @@ public class TransactionRepo(MySqlConnection conn)
         await conn.OpenAsync();
         var accounts = new AccountRepo(conn);
 
-        var receiver = await accounts.GetAccountById(transaction.ReceiverId);
+        await using var tx = await conn.BeginTransactionAsync();
+        var receiver = await accounts.GetAccountById(transaction.ReceiverId, tx);
         if (receiver is null)
             throw new NoSuchReceiverException($"No account with this ID: {transaction.ReceiverId}");
 
-        var payer = await accounts.GetAccountById(transaction.SenderId);
+        var payer = await accounts.GetAccountById(transaction.SenderId, tx);
         if (payer is null)
             throw new NoSuchPayerException($"No account with this ID: {transaction.SenderId}");
 
-        await using var tx = await conn.BeginTransactionAsync();
         try
         {
             await accounts.WithdrawFromAccountWithId(transaction.SenderId, transaction.Amount, tx);
