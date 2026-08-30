@@ -4,9 +4,33 @@ Web API for simulating bank accounts &amp; transactions written in C#
 ## What is this project about?
 This project is a simple web API that simulates bank accounts and transactions.
 
-It's not meant for actual production use.
+It's not meant for actual production use, instead, it's meant more for simulating bank accounts and transactions, for example, for testing/learning.
 
-It's meant more for simulating bank accounts and transactions, for example, for testing/learning.
+It uses a MySQL/MariaDB Database for persistence using Dapper for querying/executing statements.
+
+## Cloning and compilation
+To clone:
+```bash
+git clone https://github.com/Moritisimor/PhonyPay
+cd PhonyPay
+```
+
+To compile it:
+```bash
+dotnet publish
+```
+
+Or to just run it directly:
+```bash
+dotnet run
+```
+
+## Environment Variables
+It requires the following environment variables to be set for database connectivity to work:
+- `DATABASE`
+- `DB_USERNAME`
+- `DB_SERVER` (The host)
+- `DB_PASSWORD`
 
 ## Rest API
 ### /api/status
