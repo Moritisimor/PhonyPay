@@ -6,11 +6,20 @@ namespace PhonyPay.Handlers;
 
 public static partial class Handlers
 {
-    public static async Task<IResult> GetTransactions(TransactionRepo transactions) 
+    public static async Task<IResult> GetTransactions(TransactionRepo transactions)
     => Results.Ok(await transactions.GetTransactions());
-    
-    public static async Task<IResult> GetTransactionById(TransactionRepo transactions, int id) 
-    => Results.Ok(await transactions.GetTransactionById(id));
+
+    public static async Task<IResult> GetTransactionById(TransactionRepo transactions, int id)
+    {
+        try
+        {
+            return Results.Ok(await transactions.GetTransactionById(id));
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.NotFound(new { error = "Transaction not found" });
+        }
+    }
 
     public static async Task<IResult> PostTransaction(TransactionPost transaction, TransactionRepo transactions)
     {
@@ -21,11 +30,11 @@ public static partial class Handlers
         }
         catch (NoSuchPayerException e)
         {
-            return Results.BadRequest(new { error = e.Message });
+            return Results.NotFound(new { error = e.Message });
         }
         catch (NoSuchReceiverException e)
         {
-            return Results.BadRequest(new { error = e.Message });
+            return Results.NotFound(new { error = e.Message });
         }
         catch (PayerIsReceiverException e)
         {
@@ -37,7 +46,7 @@ public static partial class Handlers
         }
         catch (InsufficientBalanceException e)
         {
-            return Results.BadRequest(new { error = e.Message });
+            return Results.UnprocessableEntity(new { error = e.Message });
         }
     }
 }

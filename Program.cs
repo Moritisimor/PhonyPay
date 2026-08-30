@@ -20,7 +20,7 @@ using (var scope = app.Services.CreateScope())
 {
     var accRep = scope.ServiceProvider.GetRequiredService<AccountRepo>();
     var transRep = scope.ServiceProvider.GetRequiredService<TransactionRepo>();
-    
+
     await accRep.Migrate();
     await transRep.Migrate();
 }

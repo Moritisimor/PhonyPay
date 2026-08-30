@@ -8,14 +8,15 @@ namespace PhonyPay.Repo;
 public class TransactionRepo(MySqlConnection conn)
 {
     public async Task Migrate() =>
-        await conn.ExecuteAsync("""
-                                CREATE TABLE IF NOT EXISTS Transactions (
-                                    TransactionId INTEGER PRIMARY KEY AUTO_INCREMENT,
-                                    PayerId INTEGER NOT NULL,
-                                    ReceiverId INTEGER NOT NULL,
-                                    Amount REAL NOT NULL
-                                )
-                                """);
+        await conn.ExecuteAsync(
+            """
+            CREATE TABLE IF NOT EXISTS Transactions (
+                TransactionId INTEGER PRIMARY KEY AUTO_INCREMENT,
+                SenderId INTEGER NOT NULL,
+                ReceiverId INTEGER NOT NULL,
+                Amount REAL NOT NULL
+            )
+            """);
 
     public async Task<int> Insert(TransactionPost transaction)
     {
@@ -24,10 +25,10 @@ public class TransactionRepo(MySqlConnection conn)
 
         if (transaction.Amount <= 0)
             throw new ZeroOrNegativeAmountException("Cannot transfer a negative or zero amount");
-        
+
         await conn.OpenAsync();
         var accounts = new AccountRepo(conn);
-        
+
         var receiver = await accounts.GetAccountById(transaction.ReceiverId);
         if (receiver is null)
             throw new NoSuchReceiverException($"No account with this ID: {transaction.ReceiverId}");
@@ -43,7 +44,7 @@ public class TransactionRepo(MySqlConnection conn)
             await accounts.DepositToAccountWithId(transaction.ReceiverId, transaction.Amount, tx);
             var insertId = await conn.QuerySingleAsync<int>(
                 """
-                INSERT INTO Transactions (PayerId, ReceiverId, Amount) 
+                INSERT INTO Transactions (SenderId, ReceiverId, Amount) 
                 VALUES (@PayerId, @ReceiverId, @Amount);
 
                 SELECT LAST_INSERT_ID();
@@ -55,7 +56,7 @@ public class TransactionRepo(MySqlConnection conn)
                     transaction.Amount
                 },
                 transaction: tx);
-            
+
             await tx.CommitAsync();
             return insertId;
         }
@@ -65,15 +66,17 @@ public class TransactionRepo(MySqlConnection conn)
             throw;
         }
     }
-    
+
     public async Task<IEnumerable<Transaction>> GetTransactions() =>
         await conn.QueryAsync<Transaction>("SELECT * FROM Transactions");
-    
+
     public async Task<Transaction> GetTransactionById(int transactionId) =>
         await conn.QuerySingleAsync<Transaction>(
-            "SELECT * FROM Transactions WHERE TransactionId = @transactionId", 
+            "SELECT * FROM Transactions WHERE TransactionId = @transactionId",
             new { transactionId });
-    
+
     public async Task DeleteTransactionWithId(int transactionId) =>
-        await conn.ExecuteAsync("DELETE FROM Transactions WHERE TransactionId = @transactionId", new { transactionId });
+        await conn.ExecuteAsync(
+            "DELETE FROM Transactions WHERE TransactionId = @transactionId",
+            new { transactionId });
 }

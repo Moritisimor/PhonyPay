@@ -5,7 +5,7 @@ namespace PhonyPay.Handlers;
 
 public static partial class Handlers
 {
-    public static IResult Status() 
+    public static IResult Status()
     => Results.Ok(new { status = "OK" });
 
     public static IResult DatabaseStatus(MySqlConnection conn)

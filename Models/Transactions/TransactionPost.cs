@@ -6,10 +6,10 @@ public class TransactionPost
 {
     [Required]
     public required int ReceiverId { get; set; }
-    
+
     [Required]
     public required int SenderId { get; set; }
-    
-    [Required] 
+
+    [Required]
     public required double Amount { get; set; }
 }

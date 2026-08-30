@@ -18,7 +18,7 @@ public class AccountRepo(MySqlConnection conn)
                 Balance REAL NOT NULL
             )
             """);
-    
+
     public async Task<int> Insert(AccountPost account)
     =>
         await conn.QuerySingleAsync<int>(
@@ -32,14 +32,14 @@ public class AccountRepo(MySqlConnection conn)
                 account.LastName,
                 Balance = 0.0
             });
-    
-    public async Task<Account?> GetAccountById(int accountId, MySqlTransaction? tx = null) 
+
+    public async Task<Account?> GetAccountById(int accountId, MySqlTransaction? tx = null)
     =>
         await conn.QuerySingleOrDefaultAsync<Account?>(
-            "SELECT * FROM Accounts WHERE AccountID = @accountId", 
+            "SELECT * FROM Accounts WHERE AccountID = @accountId",
             new { accountId },
             tx);
-    
+
     public async Task<IEnumerable<Account>> GetAccounts() =>
         await conn.QueryAsync<Account>("SELECT * FROM Accounts");
 
@@ -51,7 +51,7 @@ public class AccountRepo(MySqlConnection conn)
 
         if (account.Balance < amount)
             throw new InsufficientBalanceException("User's balance is not enough to withdraw this amount");
-        
+
         return await conn.QuerySingleAsync<double>(
             """
             UPDATE Accounts SET Balance = Balance - @amount WHERE AccountID = @accountId;
@@ -61,25 +61,25 @@ public class AccountRepo(MySqlConnection conn)
             tx);
     }
 
-    public async Task<double> DepositToAccountWithId(int accountId, double amount) 
+    public async Task<double> DepositToAccountWithId(int accountId, double amount)
     =>
         await conn.QuerySingleAsync<double>(
             """
             UPDATE Accounts SET Balance = Balance + @amount WHERE AccountID = @accountId;
             SELECT Balance FROM Accounts WHERE AccountID = @accountId;
-            """, 
+            """,
             new { accountId, amount });
-    
-    public async Task<double> DepositToAccountWithId(int accountId, double amount, MySqlTransaction tx) 
+
+    public async Task<double> DepositToAccountWithId(int accountId, double amount, MySqlTransaction tx)
     =>
         await conn.QuerySingleAsync<double>(
             """
             UPDATE Accounts SET Balance = Balance + @amount WHERE AccountID = @accountId;
             SELECT Balance FROM Accounts WHERE AccountID = @accountId;
-            """, 
+            """,
             new { accountId, amount },
             transaction: tx);
-    
-    public async Task DeleteAccountWithId(int accountId) 
+
+    public async Task DeleteAccountWithId(int accountId)
     => await conn.ExecuteAsync("DELETE FROM Accounts WHERE AccountID = @accountId", new { accountId });
 }

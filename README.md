@@ -122,7 +122,7 @@ The JSON response is an array of objects such as this:
 [
   {
     "transactionId": "integer",
-    "payerId": "integer",
+    "senderId": "integer",
     "receiverId": "integer",
     "amount": "float"
   }
@@ -138,7 +138,7 @@ Otherwise, a 200 OK is returned along with an object such as this:
 ```json
 {
   "transactionId": "integer",
-  "payerId": "integer",
+  "senderId": "integer",
   "receiverId": "integer",
   "amount": "float"
 }
@@ -150,13 +150,19 @@ Creates a new transaction in the database.
 A JSON of this schema is expected:
 ```json
 {
-  "payerId": "integer",
+  "senderId": "integer",
   "receiverId": "integer",
   "amount": "float"
 }
 ```
 
 A 400 Bad Request is returned if the request body is not valid JSON or does not contain the required properties.
+
+If the Receiver ID or the Sender ID is not a valid account ID, a 404 Not Found is returned.
+
+If the Receiver ID is the same as the Sender ID or the amount is zero or negative, a 400 Bad Request is returned.
+
+If the Sender has insufficient funds, a 422 Unprocessable Entity is returned.
 
 Otherwise, a 200 OK is returned along with the newly created transaction's ID within a JSON object such as this:
 ```json
