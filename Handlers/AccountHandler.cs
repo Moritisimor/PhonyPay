@@ -6,8 +6,11 @@ namespace PhonyPay.Handlers;
 
 public static partial class Handlers
 {
-    public static async Task<IResult> GetAccounts(AccountRepo accounts) => Results.Ok(await accounts.GetAccounts());
-    public static async Task<IResult> GetAccountById(AccountRepo accounts, int id) =>
+    public static async Task<IResult> GetAccounts(AccountRepo accounts)
+    => Results.Ok(await accounts.GetAccounts());
+    
+    public static async Task<IResult> GetAccountById(AccountRepo accounts, int id) 
+    => 
         await accounts.GetAccountById(id) switch
         {
             {} a => Results.Ok(a),
